@@ -14,6 +14,7 @@ import { EmailEntity } from '../email/email.entity';
 import { UserId } from './user.interfaces';
 import { UserService } from './user.service';
 import { AddUser, User, UserIdArgs } from './user.types';
+import { createEmailFilter } from '../email/email.utils';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -43,22 +44,11 @@ export class UserResolver {
     @Parent() user: User,
     @Args() filters: EmailFiltersArgs,
   ): Promise<UserEmail[]> {
-    const where: FindOptionsWhere<EmailEntity> = {
+    const where = {
+      ...createEmailFilter(filters),
       userId: Equal(user.id),
     };
 
-    if (filters.address?.equal) {
-      where.address = Equal(filters.address.equal);
-    }
-
-    if (filters.address?.in?.length > 0) {
-      if (filters.address.equal) {
-        where.address = In([filters.address.equal, ...filters.address.in]);
-      } else {
-        where.address = In(filters.address.in);
-      }
-    }
-    
     return this.emailRepository.find({
       where,
       order: { address: 'asc' },
