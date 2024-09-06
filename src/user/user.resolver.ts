@@ -21,7 +21,7 @@ export class UserResolver {
     private readonly _service: UserService,
     @InjectRepository(EmailEntity)
     private readonly emailRepository: Repository<EmailEntity>,
-  ) {}
+  ) { }
 
   @Query(() => User, { name: 'user', nullable: true })
   getUser(@Args() { userId }: UserIdArgs): Promise<User> {
@@ -47,16 +47,18 @@ export class UserResolver {
       userId: Equal(user.id),
     };
 
-    if (filters.address) {
-      if (filters.address.equal) {
-        where.address = Equal(filters.address.equal);
-      }
+    if (filters.address?.equal) {
+      where.address = Equal(filters.address.equal);
+    }
 
-      if (filters.address.in?.length > 0) {
+    if (filters.address?.in?.length > 0) {
+      if (filters.address.equal) {
+        where.address = In([filters.address.equal, ...filters.address.in]);
+      } else {
         where.address = In(filters.address.in);
       }
     }
-
+    
     return this.emailRepository.find({
       where,
       order: { address: 'asc' },
