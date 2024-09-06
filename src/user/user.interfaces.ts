@@ -5,6 +5,7 @@ export type IUser = {
   name: string;
   birthdate?: Date | null;
   emails?: UserEmail[];
+  status?: string;
 };
 
 export type IAddUser = Omit<IUser, 'id'>;
