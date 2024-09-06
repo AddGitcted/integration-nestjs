@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { Maybe } from 'graphql/jsutils/Maybe';
 import { IUser, IAddUser } from './user.interfaces';
+import { UserEmail } from '../email/email.types';
 
 /**
  * Type de sortie GraphQL d'un utilisateur pour les récupérations
@@ -22,6 +23,9 @@ export class User implements IUser {
 
   @Field(() => Date, { nullable: true })
   birthdate?: Maybe<Date>;
+
+  @Field(() => [UserEmail], { nullable: true })
+  emails?: UserEmail[];
 }
 
 /**

@@ -21,5 +21,5 @@ export class EmailEntity {
 
   @ManyToOne(() => UserEntity, (user) => user.emails)
   @JoinColumn({ name: 'user_id' })
-  user?: string;
+  user?: UserEntity;
 }
