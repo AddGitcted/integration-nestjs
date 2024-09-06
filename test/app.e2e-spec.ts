@@ -263,5 +263,125 @@ describe('Tests e2e', () => {
           });
       });
     });
+
+    describe('[Mutation] addEmail', () => {
+      it(`[13] Devrait ajouter un e-mail à un utilisateur`, () => {
+        const newEmail = {
+          address: 'test4@upcse-integration.coop',
+          userId: knownUserId,
+        };
+
+        return request(app.getHttpServer())
+          .post('/graphql')
+          .send({
+            query: `mutation { addEmail(newEmail: {address: "${newEmail.address}", userId: "${newEmail.userId}"}) { id address } }`,
+          })
+          .expect(200)
+          .expect((res) => {
+            expect(res.body.errors).toBeUndefined();
+            expect(res.body.data.addEmail).toBeDefined();
+            expect(res.body.data.addEmail.address).toBe(newEmail.address);
+          });
+      });
+
+      it(`[14] Devrait retourner une erreur si l'utilisateur est inactif`, () => {
+        const inactiveUserId = '0b2f6dc7-7b69-4bc3-8d1d-83f0c1d3e9b1';
+
+        const inactiveUser = {
+          id: inactiveUserId,
+          name: 'Inactive User',
+          status: 'inactive',
+          birthdate: new Date(1980, 1, 1).toISOString(),
+          emails: [],
+        };
+        return userRepo.insert(inactiveUser).then(() => {
+          const newEmail = {
+            address: 'inactive@upcse-integration.coop',
+            userId: inactiveUserId,
+          };
+
+          return request(app.getHttpServer())
+            .post('/graphql')
+            .send({
+              query: `mutation { addEmail(newEmail: {address: "${newEmail.address}", userId: "${newEmail.userId}"}) { id address } }`,
+            })
+            .expect(200)
+            .expect((res) => {
+              expect(
+                res.body.errors?.[0]?.extensions?.originalError?.message,
+              ).toContain('Impossible d\'ajouter un e-mail à un utilisateur inactif');
+            });
+        });
+      });
+    });
+    describe('[Mutation] removeEmail', () => {
+
+      it(`[15] Devrait supprimer un e-mail d'un utilisateur`, () => {
+        return request(app.getHttpServer())
+          .post('/graphql')
+          .send({
+            query: `mutation { removeEmail(emailId: "${email2.id}") }`,
+          })
+          .expect(200)
+          .expect((res) => {
+            expect(res.body.errors).toBeUndefined();
+            expect(res.body.data.removeEmail).toBe(email2.id);
+          });
+      });
+
+      it(`[16] Devrait retourner une erreur si l'utilisateur est inactif`, () => {
+        const inactiveUserId = '0b2f6dc7-7b69-4bc3-8d1d-83f0c1d3e9b1';
+        const unknownEmailId = '0b2f6dc7-7b69-4bc3-8d1d-83f0c1d3e9b2';
+
+        const inactiveUserEmail = {
+          userId: inactiveUserId,
+          id: unknownEmailId,
+          address: 'inactive@example.com',
+        };
+        const inactiveUser = {
+          id: inactiveUserId,
+          name: 'Inactive User',
+          status: 'inactive',
+          birthdate: new Date(1980, 1, 1).toISOString(),
+          emails: [inactiveUserEmail],
+        };
+
+        return userRepo.insert(inactiveUser).then(() => {
+          return emailRepo.insert(inactiveUserEmail).then(() => {
+            return request(app.getHttpServer())
+              .post('/graphql')
+              .send({
+                query: `mutation { removeEmail(emailId: "${inactiveUserEmail.id}") }`,
+              })
+              .expect(200)
+              .expect((res) => {
+                expect(
+                  res.body.errors?.[0]?.extensions?.originalError?.message,
+                ).toContain(
+                  `Impossible de supprimer un e-mail d'un utilisateur inactif`,
+                );
+              });
+          });
+        });
+      });
+
+      it(`[17] Devrait retourner une erreur si l'e-mail n'existe pas`, () => {
+        const unknownEmailId = '0b2f6dc7-7b69-4bc3-8d1d-83f0c1d3e9b2';
+
+        return request(app.getHttpServer())
+          .post('/graphql')
+          .send({
+            query: `mutation { removeEmail(emailId: "${unknownEmailId}") }`,
+          })
+          .expect(200)
+          .expect((res) => {
+            expect(
+              res.body.errors?.[0]?.extensions?.originalError?.message,
+            ).toContain(
+              `L'e-mail avec l'identifiant ${unknownEmailId} n'existe pas`,
+            );
+          });
+      });
+    });
   });
 });
