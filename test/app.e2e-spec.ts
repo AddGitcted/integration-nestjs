@@ -314,8 +314,8 @@ describe('Tests e2e', () => {
         });
       });
     });
-    describe('[Mutation] removeEmail', () => {
 
+    describe('[Mutation] removeEmail', () => {
       it(`[15] Devrait supprimer un e-mail d'un utilisateur`, () => {
         return request(app.getHttpServer())
           .post('/graphql')

@@ -48,7 +48,6 @@ export class EmailService {
   
     await this.userService.updateUserEmails(user.id);
   
-    console.log(user)
     return savedUserEmail;
   }
   
